@@ -1,0 +1,23 @@
+kind = "mobile"
+previewPath = "/"
+title = "Just Move"
+version = "1.0.0"
+id = "artifacts/just-move"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 20012
+
+[services.development]
+run = "pnpm --filter @workspace/just-move run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/just-move", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/just-move", "run", "serve" ]
+
+[services.env]
+PORT = "20012"
+BASE_PATH = "/"
