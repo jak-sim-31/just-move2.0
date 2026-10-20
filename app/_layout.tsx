@@ -13,8 +13,8 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProvider } from '@/context/AppContext';
 import { AppStoreProvider } from '@/store/AppStore';
+import { ReminderHost } from '@/components/ReminderHost';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,6 +29,10 @@ function RootLayoutNav() {
       <Stack.Screen name="exercise/time" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/play" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/complete" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="my/notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="my/account" options={{ headerShown: false }} />
+      <Stack.Screen name="dev/metrics" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -55,11 +59,10 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <AppProvider>
-                <AppStoreProvider>
-                  <RootLayoutNav />
-                </AppStoreProvider>
-              </AppProvider>
+              <AppStoreProvider>
+                <RootLayoutNav />
+                <ReminderHost />
+              </AppStoreProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
