@@ -3,8 +3,11 @@
 운동을 꾸준히 하지 못하는 사람에게 **"지금 1분만 움직이기"** 를 제안하는 웹앱입니다.
 하루를 쉬어도 실패로 여기지 않고, 다시 돌아온 행동을 환영합니다.
 
-- 서비스 기획: [docs/service-plan.md](docs/service-plan.md)
+- 서비스 기획 (기획서 원문 부록 포함): [docs/service-plan.md](docs/service-plan.md)
 - 화면별 상세 명세: [docs/service-spec.md](docs/service-spec.md)
+- 디자인 명세: [docs/design-spec.md](docs/design-spec.md)
+- 기획서 항목별 추적표: [docs/requirements-trace.md](docs/requirements-trace.md)
+- 수정 전 코드 진단: [docs/legacy-code-review.md](docs/legacy-code-review.md)
 
 ## 실행 방법
 
