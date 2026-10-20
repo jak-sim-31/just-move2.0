@@ -1,0 +1,32 @@
+{
+  "welcome": [
+    { "id": "w-short-other-1", "restBucket": "1-2", "relation": "other", "text": "다시 와주셔서 반가워요. 오늘은 딱 1분만 같이 움직여 볼까요?" },
+    { "id": "w-short-other-2", "restBucket": "1-2", "relation": "other", "text": "기다리고 있었어요. 가볍게 시작해 봐요." },
+    { "id": "w-short-other-3", "restBucket": "1-2", "relation": "other", "text": "돌아온 것만으로도 충분해요. 1분이면 돼요." },
+    { "id": "w-short-long-1", "restBucket": "1-2", "relation": "long", "text": "역시 다시 오셨네요. 몸이 먼저 기억하고 있을 거예요." },
+    { "id": "w-short-long-2", "restBucket": "1-2", "relation": "long", "text": "반가워요! 익숙한 동작부터 가볍게 이어가 볼까요?" },
+    { "id": "w-short-long-3", "restBucket": "1-2", "relation": "long", "text": "오늘도 1분, 편하게 시작해요." },
+    { "id": "w-long-other-1", "restBucket": "3+", "relation": "other", "text": "다시 만나서 정말 반가워요. 작물도 그대로 기다리고 있어요." },
+    { "id": "w-long-other-2", "restBucket": "3+", "relation": "other", "text": "와주셔서 고마워요. 오늘은 1분만, 천천히 해봐요." },
+    { "id": "w-long-other-3", "restBucket": "3+", "relation": "other", "text": "언제 와도 괜찮아요. 지금 이 순간부터 다시 시작해요." },
+    { "id": "w-long-long-1", "restBucket": "3+", "relation": "long", "text": "돌아오셨네요, 반가워요. 지금까지 쌓아 온 것은 그대로예요." },
+    { "id": "w-long-long-2", "restBucket": "3+", "relation": "long", "text": "오랜만이에요. 작물이 기다리고 있어요. 1분만 함께해요." },
+    { "id": "w-long-long-3", "restBucket": "3+", "relation": "long", "text": "다시 와주셔서 고마워요. 편한 동작부터 시작해요." }
+  ],
+  "notification": [
+    { "id": "n-idle-1", "segment": "not_moved", "text": "지금 1분만 움직여 볼까요?" },
+    { "id": "n-idle-2", "segment": "not_moved", "text": "앉은 자리에서 가볍게 1분, 어때요?" },
+    { "id": "n-idle-3", "segment": "not_moved", "text": "잠깐 몸을 풀어 줄 시간이에요." },
+    { "id": "n-done-1", "segment": "moved", "text": "오늘도 움직였네요! 한 번 더 해볼까요?" },
+    { "id": "n-done-2", "segment": "moved", "text": "물방울을 더 모으러 가볼까요?" },
+    { "id": "n-done-3", "segment": "moved", "text": "작물이 물을 기다리고 있어요." }
+  ],
+  "phrases": [
+    { "id": "p-morning-1", "band": "morning", "text": "좋은 아침이에요. 1분이면 몸이 깨어나요." },
+    { "id": "p-morning-2", "band": "morning", "text": "오늘 하루, 가볍게 시작해 볼까요?" },
+    { "id": "p-afternoon-1", "band": "afternoon", "text": "잠깐 앉은 자리에서 몸을 풀어 볼까요?" },
+    { "id": "p-afternoon-2", "band": "afternoon", "text": "지금 1분이면 충분해요." },
+    { "id": "p-evening-1", "band": "evening", "text": "오늘 하루도 수고했어요. 가볍게 풀어 줄까요?" },
+    { "id": "p-evening-2", "band": "evening", "text": "자기 전 1분, 몸이 한결 가벼워져요." }
+  ]
+}
