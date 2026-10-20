@@ -194,7 +194,7 @@ export default function PhotoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   skipText: { fontSize: 14 },
-  scroll: { paddingHorizontal: 20, paddingTop: 24 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16 },
   previewWrap: { alignItems: 'center', marginBottom: 20 },
   preview: { width: 240, height: 240, borderRadius: 16, borderWidth: 2, marginBottom: 12 },
   changePhoto: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 14 },

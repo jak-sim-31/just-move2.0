@@ -74,7 +74,7 @@ export default function SchedulesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 20 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16 },
   empty: { alignItems: 'center', paddingTop: 48, gap: 10 },
   emptyTitle: { fontSize: 15, fontWeight: '700' },
   emptySub: { fontSize: 13 },

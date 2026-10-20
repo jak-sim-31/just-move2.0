@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
@@ -10,13 +10,15 @@ import { POSTURE_LABEL, type Posture } from '@/lib/types';
  * 디자인 기준: docs/design-spec.md §6
  */
 
-/** 화면 위·아래 여백. 수정 전에는 웹 위 여백이 67이었으나, 휴대폰 첫 화면을 넓히려고 24로 줄였다 */
+/**
+ * 화면 위·아래 여백 = 기기의 안전 영역(노치·홈 막대)만큼.
+ * 일반 브라우저에서는 0, 아이폰 홈 화면 앱·네이티브 앱에서는 상태표시줄 높이.
+ * (수정 전에는 웹에서 위 67px을 고정으로 비워 실제 브라우저에서 빈 공간이 컸다)
+ * 각 화면은 이 값 위에 작은 간격(탭 화면 16, 흐름 화면 머리 8)만 더한다.
+ */
 export function useLegacyPad() {
   const insets = useSafeAreaInsets();
-  return {
-    top: Platform.OS === 'web' ? 24 : insets.top,
-    bottom: Platform.OS === 'web' ? 34 : insets.bottom,
-  };
+  return { top: insets.top, bottom: insets.bottom };
 }
 
 /** 흐름 화면 머리: [‹] + 단계 점 (+ 가운데 제목) + 오른쪽 요소, 아래 가는 선 */
@@ -171,7 +173,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingBottom: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   backBtn: { width: 40, height: 40, alignItems: 'flex-start', justifyContent: 'center' },

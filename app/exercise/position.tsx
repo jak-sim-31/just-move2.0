@@ -41,7 +41,7 @@ export default function PositionScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 24 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16 },
   title: { fontSize: 24, fontWeight: '800', marginBottom: 8 },
   subtitle: { fontSize: 14, marginBottom: 28 },
 });

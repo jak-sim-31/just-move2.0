@@ -99,7 +99,7 @@ export default function TimeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 24 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16 },
   breadcrumb: {
     flexDirection: 'row',
     alignItems: 'center',

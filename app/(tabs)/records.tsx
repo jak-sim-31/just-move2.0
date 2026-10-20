@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -188,7 +188,7 @@ export default function RecordsScreen() {
     if (t) setSegment(t);
   }, [params.tab]);
   const { sessions, photos } = useStore();
-  const topPad = Platform.OS === 'web' ? 24 : insets.top;
+  const topPad = insets.top;
 
   const recent = useMemo(
     () => [...countedSessions(sessions)].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 10),
@@ -268,7 +268,7 @@ export default function RecordsScreen() {
           data={recent}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === 'web' ? 34 + 80 : 80 }]}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.empty}>

@@ -1,17 +1,14 @@
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { FlowHeader } from '@/components/Legacy';
 
-/** 화면 위·아래 여백 — useLegacyPad와 같은 값 */
+/** 화면 위·아래 여백 — useLegacyPad와 같은 값 (기기 안전 영역) */
 export function useScreenPad() {
   const insets = useSafeAreaInsets();
-  return {
-    top: Platform.OS === 'web' ? 24 : insets.top,
-    bottom: Platform.OS === 'web' ? 34 : insets.bottom,
-  };
+  return { top: insets.top, bottom: insets.bottom };
 }
 
 /** 보조 화면 머리 — 수정 전 흐름 화면 머리(FlowHeader)와 같은 모양 */

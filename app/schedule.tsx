@@ -325,7 +325,7 @@ export default function ScheduleScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 20 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16 },
   exCard: { borderRadius: 14, padding: 18, marginBottom: 12, flexDirection: 'row', alignItems: 'center' },
   exCardLabel: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
   exCardTitle: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },

@@ -90,7 +90,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: pad.top + 8, paddingBottom: pad.bottom + 100 }]}
+        contentContainerStyle={[styles.scroll, { paddingTop: pad.top + 16, paddingBottom: pad.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── 첫 화면 ───────────────────────────── */}
