@@ -20,7 +20,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '벽을 이용한 가벼운 상체 운동',
     detailContent:
       '1. 벽에서 팔 길이만큼 떨어져 서세요.\n2. 양손을 어깨 너비로 벽에 짚으세요.\n3. 팔꿈치를 굽혀 코가 벽에 가까워지도록 기울이세요.\n4. 천천히 원위치로 밀어 올리세요.\n5. 허리를 곧게 유지하며 반복하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.wallPushUp),
+    ...makeYoutubeUrl(),
     positions: ['서있다'],
     durationMinutes: 3,
     targetValue: 15,
@@ -37,7 +37,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '누운 자세로 허리와 복부를 함께 단련',
     detailContent:
       '1. 등을 바닥에 대고 편안히 누우세요.\n2. 두 무릎을 가슴 쪽으로 천천히 당겨오세요.\n3. 두 팔로 무릎을 감싸 3초 유지하세요.\n4. 천천히 발을 내리되 바닥에 닿기 직전에 멈추세요.\n5. 반복하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.lyingKnee),
+    ...makeYoutubeUrl(),
     positions: ['누워있다'],
     durationMinutes: 3,
     targetValue: 15,
@@ -54,7 +54,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '의자에 앉아 목과 어깨 긴장을 풀어요',
     detailContent:
       '1. 등받이에 등을 대고 편안하게 앉으세요.\n2. 오른손을 왼쪽 머리 위에 가볍게 얹으세요.\n3. 천천히 오른쪽으로 목을 기울여 20초 유지하세요.\n4. 반대 방향도 동일하게 실시하세요.\n5. 마지막으로 목을 앞으로 천천히 숙여 30초 유지하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.neckStretch),
+    ...makeYoutubeUrl(),
     positions: ['앉아있다'],
     durationMinutes: 1,
     targetValue: 30,
@@ -71,7 +71,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '서서 무릎을 높이 들어 심폐를 자극해요',
     detailContent:
       '1. 양발을 어깨 너비로 벌려 서세요.\n2. 오른쪽 무릎을 배꼽 높이까지 들어올리세요.\n3. 팔을 반대 방향으로 함께 흔들어 주세요.\n4. 왼쪽으로 교차하며 리듬감 있게 반복하세요.\n5. 호흡을 유지하며 꾸준히 하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.marchingKnee),
+    ...makeYoutubeUrl(),
     positions: ['서있다', '걷고 있다'],
     durationMinutes: 3,
     targetValue: 50,
@@ -88,7 +88,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '앉은 상태에서 하체 혈액순환 개선',
     detailContent:
       '1. 의자에 앉아 한쪽 발을 들어올리세요.\n2. 발목을 시계 방향으로 10회 천천히 돌리세요.\n3. 반시계 방향으로도 10회 돌리세요.\n4. 반대 발도 동일하게 실시하세요.\n5. 두 발을 동시에 까치발로 올렸다 내리세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.ankleFoot),
+    ...makeYoutubeUrl(),
     positions: ['앉아있다'],
     durationMinutes: 1,
     targetValue: 10,
@@ -105,7 +105,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '누운 자세로 하복부와 허벅지 강화',
     detailContent:
       '1. 등을 대고 누워 두 손을 엉덩이 아래 받치세요.\n2. 두 다리를 모아 바닥에서 30도 정도 들어올리세요.\n3. 3초 유지 후 천천히 내리되 바닥에 닿기 전에 멈추세요.\n4. 허리가 뜨지 않도록 복부에 힘을 주세요.\n5. 반복하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.legRaise),
+    ...makeYoutubeUrl(),
     positions: ['누워있다'],
     durationMinutes: 5,
     targetValue: 12,
@@ -122,7 +122,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '의자를 활용한 부담 없는 하체 강화',
     detailContent:
       '1. 의자 앞에 어깨 너비로 서세요.\n2. 의자에 살짝 앉듯이 천천히 내려가세요.\n3. 엉덩이가 의자에 닿으면 바로 일어서세요.\n4. 무릎이 발끝 앞으로 나오지 않게 주의하세요.\n5. 팔은 앞으로 뻗어 균형을 잡으세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.chairSquat),
+    ...makeYoutubeUrl(),
     positions: ['서있다'],
     durationMinutes: 5,
     targetValue: 15,
@@ -139,7 +139,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '굳은 어깨와 가슴을 시원하게 풀어요',
     detailContent:
       '1. 양발을 바닥에 붙이고 편안하게 앉으세요.\n2. 어깨를 앞에서 뒤로 크게 5회 돌리세요.\n3. 뒤에서 앞으로도 5회 돌리세요.\n4. 두 손을 등 뒤에서 깍지 끼고 가슴을 앞으로 열어주세요.\n5. 10초 유지 후 천천히 풀어주세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.shoulderRoll),
+    ...makeYoutubeUrl(),
     positions: ['앉아있다', '서있다'],
     durationMinutes: 1,
     targetValue: 10,
@@ -156,7 +156,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '걷는 중 팔을 힘차게 흔들어 상체 활성화',
     detailContent:
       '1. 평소보다 빠른 걸음으로 걷기 시작하세요.\n2. 팔꿈치를 90도로 굽혀 앞뒤로 힘차게 흔드세요.\n3. 좌우 팔을 교차하며 몸통도 함께 돌려주세요.\n4. 허리를 곧게 펴고 시선은 정면을 향하세요.\n5. 자연스럽게 호흡하며 유지하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.armSwing),
+    ...makeYoutubeUrl(),
     positions: ['걷고 있다'],
     durationMinutes: 5,
     targetValue: 100,
@@ -173,7 +173,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '누운 자세로 허리 긴장 해소 및 유연성 향상',
     detailContent:
       '1. 등을 대고 편안히 누우세요.\n2. 두 무릎을 세우고 발바닥을 바닥에 붙이세요.\n3. 두 무릎을 오른쪽으로 천천히 기울이세요.\n4. 양 어깨는 바닥에서 떨어지지 않게 하세요.\n5. 20초 유지 후 반대쪽도 동일하게 하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.spinalTwist),
+    ...makeYoutubeUrl(),
     positions: ['누워있다'],
     durationMinutes: 1,
     targetValue: 20,
@@ -190,7 +190,7 @@ export const SAMPLE_EXERCISES: Exercise[] = [
     summary: '서거나 걸으면서 종아리 근육 단련',
     detailContent:
       '1. 양발을 어깨 너비로 벌려 서세요. (의자나 벽을 잡아도 됩니다)\n2. 발 앞꿈치로 천천히 올라가세요.\n3. 1~2초 유지하세요.\n4. 천천히 발꿈치를 내리되 완전히 닿기 전에 멈추세요.\n5. 반복하세요.',
-    ...makeYoutubeUrl(SAMPLE_VIDEO_IDS.calfRaise),
+    ...makeYoutubeUrl(),
     positions: ['서있다', '걷고 있다'],
     durationMinutes: 3,
     targetValue: 20,
