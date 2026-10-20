@@ -1,0 +1,10 @@
+{
+  "masteredThreshold": 5,
+  "newRatio": 0.3,
+  "masteredChance": 0.1,
+  "dropDailyLimit": 5,
+  "dropsPerHarvest": 7,
+  "videoSec": 60,
+  "completeRatio": 0.8,
+  "notificationDefault": { "enabled": true, "startHour": 9, "endHour": 20 }
+}

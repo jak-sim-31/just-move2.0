@@ -62,18 +62,6 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="exercise"
-        options={{
-          title: '운동',
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="figure.run" tintColor={color} size={22} />
-            ) : (
-              <MaterialCommunityIcons name="run" size={22} color={color} />
-            ),
-        }}
-      />
-      <Tabs.Screen
         name="records"
         options={{
           title: '기록',
@@ -82,6 +70,18 @@ function ClassicTabLayout() {
               <SymbolView name="list.bullet" tintColor={color} size={22} />
             ) : (
               <Ionicons name="list" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="farm"
+        options={{
+          title: '농장',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="leaf.fill" tintColor={color} size={22} />
+            ) : (
+              <Ionicons name="leaf-outline" size={22} color={color} />
             ),
         }}
       />

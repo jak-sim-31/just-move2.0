@@ -14,33 +14,17 @@
       "backgroundColor": "#173B57"
     },
     "ios": {
-      "supportsTablet": false,
-      "infoPlist": {
-        "NSCameraUsageDescription": "인증사진 촬영을 위해 카메라가 필요합니다.",
-        "NSPhotoLibraryUsageDescription": "사진 보관함에서 인증사진을 선택하기 위해 필요합니다.",
-        "NSPhotoLibraryAddUsageDescription": "운동 인증사진을 저장하기 위해 필요합니다."
-      }
-    },
-    "android": {
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
+      "supportsTablet": false
     },
     "web": {
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/icon.png",
+      "bundler": "metro",
+      "output": "single"
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "origin": "https://replit.com/"
-        }
-      ],
+      "expo-router",
       "expo-font",
-      "expo-web-browser",
-      "expo-image-picker"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

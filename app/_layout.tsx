@@ -13,7 +13,8 @@ import {
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProvider } from '@/context/AppContext';
+import { AppStoreProvider } from '@/store/AppStore';
+import { ReminderHost } from '@/components/ReminderHost';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,14 +24,15 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="exercise/position" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/time" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/recommendations" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/detail" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/video" options={{ headerShown: false }} />
+      <Stack.Screen name="exercise/play" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/complete" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/photo" options={{ headerShown: false }} />
-      <Stack.Screen name="schedule" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="my/notifications" options={{ headerShown: false }} />
+      <Stack.Screen name="my/account" options={{ headerShown: false }} />
+      <Stack.Screen name="dev/metrics" options={{ headerShown: false }} />
     </Stack>
   );
 }
@@ -57,9 +59,10 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <KeyboardProvider>
-              <AppProvider>
+              <AppStoreProvider>
                 <RootLayoutNav />
-              </AppProvider>
+                <ReminderHost />
+              </AppStoreProvider>
             </KeyboardProvider>
           </GestureHandlerRootView>
         </QueryClientProvider>
