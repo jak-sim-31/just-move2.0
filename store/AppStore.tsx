@@ -16,12 +16,15 @@ import { pickMessage, relationOf, restBucketOf, welcomeRestDays, type WelcomeMes
 import { buildPlaylist, pickReplacement, type RecommendOptions } from '@/lib/recommend';
 import { creditedMinutes, dropsToGrant, isItemCompleted } from '@/lib/session';
 import { dropsOnDate, movedDateKeys } from '@/lib/stats';
+import { sessionPoints } from '@/lib/rewards';
 import type {
   AppSettings,
   Exercise,
   InProgress,
   Perceived,
   Posture,
+  ProofPhoto,
+  Schedule,
   Session,
   SessionItem,
 } from '@/lib/types';
@@ -30,13 +33,19 @@ type Planned = 1 | 3 | 5;
 
 interface StoreValue extends UserData {
   ready: boolean;
-  startSession(posture: Posture, plannedMin: Planned): InProgress;
+  /** firstExerciseId: 예약에서 시작할 때 첫 동작으로 고정할 운동 */
+  startSession(posture: Posture, plannedMin: Planned, firstExerciseId?: string): InProgress;
   /** 현재 재생 상태를 저장 (재생 초는 slotPlayedSec에 누적된 값) */
   saveProgress(next: InProgress): void;
   /** '다음 동작': 현재 슬롯을 다른 동작으로 교체 */
   replaceCurrentSlot(current: InProgress): InProgress;
   finishSession(current: InProgress): Session;
   setPerceived(sessionId: string, perceived: Perceived | undefined): void;
+  /** 완료 화면 선택 입력 (동작별 실제 횟수, 메모) */
+  setSessionExtras(sessionId: string, extras: { counts?: Record<string, number>; memo?: string }): void;
+  addSchedule(schedule: Omit<Schedule, 'id' | 'createdAt' | 'status'>): Schedule;
+  updateSchedule(id: string, patch: Partial<Schedule>): void;
+  addPhoto(photo: Omit<ProofPhoto, 'id'>): ProofPhoto;
   waterCrop(): WaterResult;
   /** 오늘 보여 줄 환영 문구. 조건이 아니면 null */
   getWelcome(): WelcomeMessage | null;
@@ -67,6 +76,8 @@ const empty: UserData = {
   },
   history: { welcome: [], notification: [] },
   inProgress: null,
+  schedules: [],
+  photos: [],
 };
 
 function newId(): string {
@@ -116,6 +127,12 @@ export function AppStoreProvider({
         creditedMin: credited,
         dropsEarned: drops,
         items,
+        points: sessionPoints(
+          items,
+          credited,
+          (it) => isItemCompleted(it.playedSec, it.skipped, appConfig.videoSec, appConfig.completeRatio),
+          exerciseById,
+        ),
       };
 
       const sessions = [session, ...ref.current.sessions.filter((s) => s.id !== session.id)];
@@ -182,9 +199,16 @@ export function AppStoreProvider({
   );
 
   const startSession = useCallback(
-    (posture: Posture, plannedMin: Planned): InProgress => {
+    (posture: Posture, plannedMin: Planned, firstExerciseId?: string): InProgress => {
       if (ref.current.inProgress) finalize(ref.current.inProgress);
-      const list = buildPlaylist(recommendBase(posture, plannedMin));
+      let list = buildPlaylist(recommendBase(posture, plannedMin));
+      const first = firstExerciseId ? exerciseById(firstExerciseId) : undefined;
+      if (first) {
+        // 예약한 운동을 첫 동작으로 고정하고, 나머지 칸은 추천에서 겹치지 않게 채운다
+        const rest = list.filter((e) => e.id !== first.id);
+        list = [first, ...rest].slice(0, plannedMin);
+        while (list.length < plannedMin) list.push(first);
+      }
       const now = Date.now();
       const cur: InProgress = {
         id: newId(),
@@ -253,6 +277,51 @@ export function AppStoreProvider({
       );
       commit({ sessions });
       void repository.saveSessions(sessions);
+    },
+    [commit, repository],
+  );
+
+  const setSessionExtras = useCallback(
+    (sessionId: string, extras: { counts?: Record<string, number>; memo?: string }) => {
+      const sessions = ref.current.sessions.map((s) => (s.id === sessionId ? { ...s, ...extras } : s));
+      commit({ sessions });
+      void repository.saveSessions(sessions);
+    },
+    [commit, repository],
+  );
+
+  const addSchedule = useCallback(
+    (input: Omit<Schedule, 'id' | 'createdAt' | 'status'>): Schedule => {
+      const schedule: Schedule = {
+        ...input,
+        id: newId(),
+        status: 'scheduled',
+        createdAt: new Date().toISOString(),
+      };
+      const schedules = [schedule, ...ref.current.schedules];
+      commit({ schedules });
+      void repository.saveSchedules(schedules);
+      return schedule;
+    },
+    [commit, repository],
+  );
+
+  const updateSchedule = useCallback(
+    (id: string, patch: Partial<Schedule>) => {
+      const schedules = ref.current.schedules.map((s) => (s.id === id ? { ...s, ...patch } : s));
+      commit({ schedules });
+      void repository.saveSchedules(schedules);
+    },
+    [commit, repository],
+  );
+
+  const addPhoto = useCallback(
+    (input: Omit<ProofPhoto, 'id'>): ProofPhoto => {
+      const photo: ProofPhoto = { ...input, id: newId() };
+      const photos = [photo, ...ref.current.photos.filter((p) => p.sessionId !== input.sessionId)];
+      commit({ photos });
+      void repository.savePhotos(photos);
+      return photo;
     },
     [commit, repository],
   );
@@ -352,6 +421,10 @@ export function AppStoreProvider({
       replaceCurrentSlot,
       finishSession,
       setPerceived,
+      setSessionExtras,
+      addSchedule,
+      updateSchedule,
+      addPhoto,
       waterCrop,
       getWelcome,
       markWelcomeShown,
@@ -364,6 +437,7 @@ export function AppStoreProvider({
     }),
     [
       data, ready, startSession, saveProgress, replaceCurrentSlot, finishSession, setPerceived,
+      setSessionExtras, addSchedule, updateSchedule, addPhoto,
       waterCrop, getWelcome, markWelcomeShown, markLoginPromptShown, mockLogin, setNotification,
       setReminder, recordNotificationShown, resetAll,
     ],

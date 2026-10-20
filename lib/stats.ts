@@ -77,3 +77,22 @@ export function perceivedCounts(sessions: Session[]) {
   for (const s of countedSessions(sessions)) if (s.perceived) c[s.perceived]++;
   return c;
 }
+
+/** 날짜별 운동 횟수 (캘린더의 2회 이상 표시용) */
+export function sessionCountsByDate(sessions: Session[]): Record<string, number> {
+  const c: Record<string, number> = {};
+  for (const s of countedSessions(sessions)) c[s.localDate] = (c[s.localDate] ?? 0) + 1;
+  return c;
+}
+
+/** 기간 안의 통계 (기록 탭 통계 상자) */
+export function rangeSummary(sessions: Session[], from: string, to: string) {
+  const list = countedSessions(sessions).filter((s) => s.localDate >= from && s.localDate <= to);
+  return {
+    sessions: list,
+    count: list.length,
+    movedDays: new Set(list.map((s) => s.localDate)).size,
+    minutes: list.reduce((a, s) => a + s.creditedMin, 0),
+    points: list.reduce((a, s) => a + (s.points ?? 0), 0),
+  };
+}
