@@ -1,105 +1,108 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { addMonths, formatKoMonth, monthStartKey, todayKey, weekdayOf } from '@/lib/date';
-import { monthDays } from '@/lib/stats';
+import { PeriodNav } from '@/components/StatsUI';
+import { addMonths, daysInMonth, formatKoMonth, monthStartKey, todayKey, weekdayOf, addDays } from '@/lib/date';
+import { sessionCountsByDate } from '@/lib/stats';
 import type { Session } from '@/lib/types';
 
 const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
 
-/** 움직인 날에만 표시한다. 쉰 날에는 아무 표시도 하지 않는다. */
-export function MonthCalendar({
-  sessions,
-  month: controlledMonth,
-  onMonthChange,
-}: {
-  sessions: Session[];
-  /** 지정하면 부모가 달을 관리한다 */
-  month?: string;
-  onMonthChange?: (month: string) => void;
-}) {
+/**
+ * 수정 전 월간 통계의 캘린더(357e0d7)와 같은 모양.
+ * 움직인 날만 칠하고(2회 이상이면 횟수), 쉰 날에는 아무 표시도 하지 않는다.
+ */
+export function MonthGrid({ sessions, month }: { sessions: Session[]; month: string }) {
   const colors = useColors();
   const today = todayKey();
-  const [innerMonth, setInnerMonth] = useState(monthStartKey(today));
-  const month = controlledMonth ?? innerMonth;
-  const setMonth = (m: string) => (onMonthChange ? onMonthChange(m) : setInnerMonth(m));
-  const days = monthDays(sessions, month);
-  const lead = weekdayOf(month);
-  const cells: ({ key: string; moved: boolean } | null)[] = [
-    ...Array.from({ length: lead }, () => null),
-    ...days,
-  ];
-  while (cells.length % 7 !== 0) cells.push(null);
+  const counts = sessionCountsByDate(sessions);
+  const start = monthStartKey(month);
+  const lead = weekdayOf(start);
+  const total = daysInMonth(start);
+  const cells = Math.ceil((lead + total) / 7) * 7;
 
   return (
-    <View style={[styles.wrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <View style={styles.head}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="이전 달"
-          onPress={() => setMonth(addMonths(month, -1))}
-          style={styles.nav}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.primary} />
-        </Pressable>
-        <Text style={[styles.title, { color: colors.text }]}>{formatKoMonth(month)}</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="다음 달"
-          onPress={() => setMonth(addMonths(month, 1))}
-          style={styles.nav}
-          hitSlop={8}
-        >
-          <Ionicons name="chevron-forward" size={22} color={colors.primary} />
-        </Pressable>
-      </View>
-      <View style={styles.row}>
+    <View>
+      <View style={styles.calHeader}>
         {WEEK.map((w) => (
-          <Text key={w} style={[styles.weekday, { color: colors.textSecondary }]}>
+          <Text key={w} style={[styles.calDayLabel, { color: colors.textSecondary }]}>
             {w}
           </Text>
         ))}
       </View>
-      {Array.from({ length: cells.length / 7 }, (_, r) => (
-        <View key={r} style={styles.row}>
-          {cells.slice(r * 7, r * 7 + 7).map((c, i) => (
-            <View key={i} style={styles.cell}>
-              {c ? (
-                <View
-                  style={[
-                    styles.dayCircle,
-                    c.moved && { backgroundColor: colors.accent },
-                    c.key === today && !c.moved && { borderColor: colors.primary, borderWidth: 1.5 },
-                  ]}
-                >
+      <View style={styles.calGrid}>
+        {Array.from({ length: cells }).map((_, idx) => {
+          const dayNum = idx - lead + 1;
+          const valid = dayNum >= 1 && dayNum <= total;
+          const key = valid ? addDays(start, dayNum - 1) : '';
+          const count = valid ? counts[key] ?? 0 : 0;
+          const isToday = key === today;
+          const active = count > 0;
+          return (
+            <View
+              key={idx}
+              accessibilityLabel={valid ? `${dayNum}일${active ? ` 운동 ${count}회` : ''}` : undefined}
+              style={[
+                styles.calCell,
+                active && { backgroundColor: colors.primary },
+                isToday && !active && { borderWidth: 1.5, borderColor: colors.primary },
+              ]}
+            >
+              {valid ? (
+                <>
                   <Text
                     style={[
-                      styles.dayText,
-                      { color: c.moved ? '#FFFFFF' : colors.text, fontWeight: c.moved ? '800' : '500' },
+                      styles.calDayNum,
+                      { color: active ? '#FFFFFF' : isToday ? colors.primary : colors.text },
                     ]}
                   >
-                    {Number(c.key.slice(8))}
+                    {dayNum}
                   </Text>
-                </View>
+                  {count > 1 ? (
+                    <Text style={[styles.calCount, { color: 'rgba(255,255,255,0.8)' }]}>{count}</Text>
+                  ) : null}
+                </>
               ) : null}
             </View>
-          ))}
-        </View>
-      ))}
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** 홈에서 쓰는 캘린더: 달 이동 + 캘린더 (기본 카드 안) */
+export function MonthCalendar({ sessions }: { sessions: Session[] }) {
+  const colors = useColors();
+  const current = monthStartKey(todayKey());
+  const [month, setMonth] = useState(current);
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <PeriodNav
+        big
+        label={formatKoMonth(month)}
+        onPrev={() => setMonth(addMonths(month, -1))}
+        onNext={() => setMonth(addMonths(month, 1))}
+        nextDisabled={month >= current}
+      />
+      <MonthGrid sessions={sessions} month={month} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { borderWidth: 1, borderRadius: 18, padding: 14 },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
-  nav: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 17, fontWeight: '800' },
-  row: { flexDirection: 'row' },
-  weekday: { flex: 1, textAlign: 'center', fontSize: 13, paddingVertical: 6 },
-  cell: { flex: 1, height: 40, alignItems: 'center', justifyContent: 'center' },
-  dayCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  dayText: { fontSize: 15 },
+  card: { borderRadius: 14, borderWidth: 1, padding: 16 },
+  calHeader: { flexDirection: 'row', marginBottom: 4 },
+  calDayLabel: { flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '700' },
+  calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  calCell: {
+    width: `${100 / 7}%`,
+    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 6,
+    marginBottom: 2,
+  },
+  calDayNum: { fontSize: 12, fontWeight: '600' },
+  calCount: { fontSize: 9, fontWeight: '700' },
 });

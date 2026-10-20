@@ -77,3 +77,15 @@ export function timeBandOf(hour: number): 'morning' | 'afternoon' | 'evening' {
   if (hour < 18) return 'afternoon';
   return 'evening';
 }
+
+/** ISO 시각 → 한국시간 'H:mm' */
+export function kstTime(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
+  return `${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+/** 'YYYY-MM-DD' → 'm월 d일' */
+export function formatMonthDay(key: string): string {
+  const [, m, d] = key.split('-').map(Number);
+  return `${m}월 ${d}일`;
+}
