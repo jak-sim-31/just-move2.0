@@ -49,3 +49,31 @@ export function weekdayOf(key: string): number {
 export function kstHour(now: number = Date.now()): number {
   return new Date(now + KST_OFFSET_MS).getUTCHours();
 }
+
+const WEEKDAY_KO = ['일', '월', '화', '수', '목', '금', '토'];
+export const weekdayLabel = (key: string): string => WEEKDAY_KO[weekdayOf(key)];
+
+/** '10월 20일 (화)' */
+export function formatKoDate(key: string): string {
+  const [, m, d] = key.split('-').map(Number);
+  return `${m}월 ${d}일 (${weekdayLabel(key)})`;
+}
+
+/** '2026년 10월' */
+export function formatKoMonth(key: string): string {
+  const [y, m] = key.split('-').map(Number);
+  return `${y}년 ${m}월`;
+}
+
+/** 'YYYY-MM-01' 기준으로 n개월 이동 */
+export function addMonths(key: string, n: number): string {
+  const [y, m] = key.split('-').map(Number);
+  const d = new Date(Date.UTC(y, m - 1 + n, 1));
+  return d.toISOString().slice(0, 10);
+}
+
+export function timeBandOf(hour: number): 'morning' | 'afternoon' | 'evening' {
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}

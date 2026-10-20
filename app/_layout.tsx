@@ -24,6 +24,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="welcome" options={{ headerShown: false, gestureEnabled: false }} />
       <Stack.Screen name="exercise/position" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/time" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/play" options={{ headerShown: false }} />
