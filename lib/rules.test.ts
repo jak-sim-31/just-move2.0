@@ -287,3 +287,20 @@ describe('운동 예약 (수정 전 기능)', () => {
     expect(dueSchedule([{ ...base, lastNotifiedDate: '2026-10-20' }], '2026-10-20', '09:05')).toBeNull();
   });
 });
+
+import { nextReminderLabel } from '@/lib/reminder';
+
+describe('홈 알림 버튼 안내', () => {
+  const at = (h: number, m = 0) => Date.parse('2026-10-20T00:00:00+09:00') + h * 3600_000 + m * 60_000;
+  const s = defaultSettings(at(10));
+  it('다음 정각을 알려 준다', () => {
+    expect(nextReminderLabel(s, at(10, 15), 0, 5)).toBe('11시');
+    expect(nextReminderLabel(s, at(7), 0, 5)).toBe('9시');
+    expect(nextReminderLabel(s, at(20, 30), 0, 5)).toBe('내일 9시');
+  });
+  it('꺼짐·물방울 다 모음·오늘은 그만', () => {
+    expect(nextReminderLabel({ ...s, notification: { ...s.notification, enabled: false } }, at(10), 0, 5)).toBe('꺼짐');
+    expect(nextReminderLabel(s, at(10), 5, 5)).toBe('내일 9시');
+    expect(nextReminderLabel({ ...s, reminder: { ...s.reminder, stopDate: '2026-10-20' } }, at(10), 0, 5)).toBe('내일 9시');
+  });
+});

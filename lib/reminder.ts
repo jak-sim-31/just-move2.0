@@ -25,3 +25,25 @@ export function reminderDueKey(
   const key = `${today}T${String(hour).padStart(2, '0')}`;
   return settings.reminder.lastFiredKey === key ? null : key;
 }
+
+/**
+ * 홈 알림 버튼에 보여 줄 다음 알림 안내.
+ * '꺼짐' / '14시' / '내일 9시' (물방울을 다 모았거나 '오늘은 그만'이면 내일)
+ */
+export function nextReminderLabel(
+  settings: AppSettings,
+  now: number,
+  dropsToday: number,
+  dropLimit: number,
+): string {
+  const n = settings.notification;
+  if (!n.enabled) return '꺼짐';
+  const today = dateKey(now);
+  const tomorrow = `내일 ${n.startHour}시`;
+  if (dropsToday >= dropLimit || settings.reminder.stopDate === today) return tomorrow;
+  let next = Math.max(kstHour(now) + 1, n.startHour);
+  if (settings.reminder.snoozeUntil && now < settings.reminder.snoozeUntil) {
+    next = Math.max(next, kstHour(settings.reminder.snoozeUntil) + (new Date(settings.reminder.snoozeUntil).getUTCMinutes() > 0 ? 1 : 0));
+  }
+  return next > n.endHour ? tomorrow : `${next}시`;
+}

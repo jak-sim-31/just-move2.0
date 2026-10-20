@@ -188,7 +188,7 @@ export default function RecordsScreen() {
     if (t) setSegment(t);
   }, [params.tab]);
   const { sessions, photos } = useStore();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = Platform.OS === 'web' ? 24 : insets.top;
 
   const recent = useMemo(
     () => [...countedSessions(sessions)].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 10),

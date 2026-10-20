@@ -10,11 +10,11 @@ import { POSTURE_LABEL, type Posture } from '@/lib/types';
  * 디자인 기준: docs/design-spec.md §6
  */
 
-/** 수정 전 화면과 같은 위·아래 여백 (웹 67/34) */
+/** 화면 위·아래 여백. 수정 전에는 웹 위 여백이 67이었으나, 휴대폰 첫 화면을 넓히려고 24로 줄였다 */
 export function useLegacyPad() {
   const insets = useSafeAreaInsets();
   return {
-    top: Platform.OS === 'web' ? 67 : insets.top,
+    top: Platform.OS === 'web' ? 24 : insets.top,
     bottom: Platform.OS === 'web' ? 34 : insets.bottom,
   };
 }

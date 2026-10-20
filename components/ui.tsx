@@ -5,11 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { FlowHeader } from '@/components/Legacy';
 
-/** 화면 위·아래 여백 — 수정 전 화면과 같은 값 (웹 67/34) */
+/** 화면 위·아래 여백 — useLegacyPad와 같은 값 */
 export function useScreenPad() {
   const insets = useSafeAreaInsets();
   return {
-    top: Platform.OS === 'web' ? 67 : insets.top,
+    top: Platform.OS === 'web' ? 24 : insets.top,
     bottom: Platform.OS === 'web' ? 34 : insets.bottom,
   };
 }
