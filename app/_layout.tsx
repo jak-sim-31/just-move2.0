@@ -26,12 +26,8 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/position" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/time" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/recommendations" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/detail" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/video" options={{ headerShown: false }} />
+      <Stack.Screen name="exercise/play" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/complete" options={{ headerShown: false }} />
-      <Stack.Screen name="exercise/photo" options={{ headerShown: false }} />
-      <Stack.Screen name="schedule" options={{ headerShown: false }} />
     </Stack>
   );
 }
