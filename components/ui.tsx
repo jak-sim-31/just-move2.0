@@ -3,48 +3,28 @@ import { Platform, Pressable, StyleSheet, Text, View, type ViewStyle } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { FlowHeader } from '@/components/Legacy';
 
-/** 화면 위·아래 여백 (웹은 노치가 없으므로 고정값) */
+/** 화면 위·아래 여백 — 수정 전 화면과 같은 값 (웹 67/34) */
 export function useScreenPad() {
   const insets = useSafeAreaInsets();
   return {
-    top: Platform.OS === 'web' ? 16 : insets.top,
-    bottom: Platform.OS === 'web' ? 16 : insets.bottom,
+    top: Platform.OS === 'web' ? 67 : insets.top,
+    bottom: Platform.OS === 'web' ? 34 : insets.bottom,
   };
 }
 
+/** 보조 화면 머리 — 수정 전 흐름 화면 머리(FlowHeader)와 같은 모양 */
 export function ScreenHeader({
   title,
   onBack,
   right,
 }: {
   title?: string;
-  onBack?: () => void;
+  onBack: () => void;
   right?: React.ReactNode;
 }) {
-  const colors = useColors();
-  const pad = useScreenPad();
-  return (
-    <View style={[styles.header, { paddingTop: pad.top + 8 }]}>
-      <View style={styles.headerSide}>
-        {onBack ? (
-          <Pressable
-            onPress={onBack}
-            accessibilityRole="button"
-            accessibilityLabel="뒤로"
-            style={styles.iconBtn}
-            hitSlop={8}
-          >
-            <Ionicons name="chevron-back" size={26} color={colors.primary} />
-          </Pressable>
-        ) : null}
-      </View>
-      <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
-        {title ?? ''}
-      </Text>
-      <View style={[styles.headerSide, { alignItems: 'flex-end' }]}>{right}</View>
-    </View>
-  );
+  return <FlowHeader title={title} onBack={onBack} right={right} />;
 }
 
 type Variant = 'primary' | 'outline' | 'ghost' | 'accent';
@@ -97,15 +77,6 @@ export function Button({
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-  headerSide: { width: 72, justifyContent: 'center' },
-  headerTitle: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700' },
-  iconBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   button: {
     minHeight: 52,
     paddingHorizontal: 20,
