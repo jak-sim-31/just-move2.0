@@ -72,6 +72,8 @@ export interface AppSettings {
   welcomeShownDate: string | null;
   loginPromptShown: boolean;
   notification: { enabled: boolean; startHour: number; endHour: number };
+  /** 알림 미루기 상태 (앱이 열려 있을 때의 알림용) */
+  reminder: { snoozeUntil: number | null; stopDate: string | null; lastFiredKey: string | null };
   /** 모의 로그인 상태 (베타에서 실제 로그인으로 교체) */
   account: { provider: 'guest' | 'kakao' | 'google' };
 }

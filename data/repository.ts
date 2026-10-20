@@ -49,6 +49,7 @@ export function defaultSettings(now: number = Date.now()): AppSettings {
     welcomeShownDate: null,
     loginPromptShown: false,
     notification: { ...appConfig.notificationDefault },
+    reminder: { snoozeUntil: null, stopDate: null, lastFiredKey: null },
     account: { provider: 'guest' },
   };
 }

@@ -175,3 +175,56 @@ describe('콘텐츠', () => {
     expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(EXERCISES.length);
   });
 });
+
+import { returnsOf, userMetrics } from '@/lib/metrics';
+
+describe('검증 지표', () => {
+  it('쉬었다 돌아온 기록을 휴식 기간별로 나눈다', () => {
+    const r = returnsOf(['2026-10-01', '2026-10-03', '2026-10-06', '2026-10-10']);
+    expect(r.map((x) => x.bucket)).toEqual(['1', '2', '3+']);
+    expect(returnsOf(['2026-10-01', '2026-10-02'])).toEqual([]);
+  });
+  it('7일 성공: 매일 운동 또는 쉬었다 복귀', () => {
+    const daily = Array.from({ length: 7 }, (_, i) => addDays('2026-10-01', i));
+    expect(userMetrics(daily, '2026-10-01', '2026-10-10').week1Success).toBe(true);
+    expect(userMetrics(['2026-10-01', '2026-10-03'], '2026-10-01', '2026-10-10').week1Success).toBe(true);
+    expect(userMetrics(['2026-10-01', '2026-10-02'], '2026-10-01', '2026-10-10').week1Success).toBe(false);
+    // 7일 창 밖의 복귀는 세지 않는다
+    expect(userMetrics(['2026-10-01', '2026-10-09'], '2026-10-01', '2026-10-20').week1Success).toBe(false);
+  });
+  it('14일 지표', () => {
+    const days = ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-05', '2026-10-06', '2026-10-08', '2026-10-12'];
+    const m = userMetrics(days, '2026-10-01', '2026-10-20');
+    expect(m.movedDaysIn14).toBe(7);
+    expect(m.practiced7of14).toBe(true);
+    expect(m.retainedLast3Of14).toBe(true); // D11 = 10-12
+    expect(userMetrics(['2026-10-01'], '2026-10-01', '2026-10-20').retainedLast3Of14).toBe(false);
+  });
+});
+
+import { reminderDueKey } from '@/lib/reminder';
+import { defaultSettings } from '@/data/repository';
+
+describe('알림', () => {
+  const at = (h: number) => Date.parse('2026-10-20T00:00:00+09:00') + h * 3600_000;
+  const base = defaultSettings(at(10));
+  it('시작~종료 시간 안의 정각에만 보낸다', () => {
+    expect(reminderDueKey(base, at(10), 0, 5)).toBe('2026-10-20T10');
+    expect(reminderDueKey(base, at(8), 0, 5)).toBeNull();
+    expect(reminderDueKey(base, at(21), 0, 5)).toBeNull();
+    expect(reminderDueKey(base, at(9), 0, 5)).toBe('2026-10-20T09');
+    expect(reminderDueKey(base, at(20), 0, 5)).toBe('2026-10-20T20');
+  });
+  it('같은 시각에는 한 번만', () => {
+    const s = { ...base, reminder: { ...base.reminder, lastFiredKey: '2026-10-20T10' } };
+    expect(reminderDueKey(s, at(10), 0, 5)).toBeNull();
+    expect(reminderDueKey(s, at(11), 0, 5)).toBe('2026-10-20T11');
+  });
+  it('물방울을 다 모았거나 꺼짐·미루기·오늘은 그만이면 보내지 않는다', () => {
+    expect(reminderDueKey(base, at(10), 5, 5)).toBeNull();
+    expect(reminderDueKey({ ...base, notification: { ...base.notification, enabled: false } }, at(10), 0, 5)).toBeNull();
+    expect(reminderDueKey({ ...base, reminder: { ...base.reminder, snoozeUntil: at(10) + 3600_000 } }, at(10), 0, 5)).toBeNull();
+    expect(reminderDueKey({ ...base, reminder: { ...base.reminder, snoozeUntil: at(10) - 1 } }, at(10), 0, 5)).toBe('2026-10-20T10');
+    expect(reminderDueKey({ ...base, reminder: { ...base.reminder, stopDate: '2026-10-20' } }, at(10), 0, 5)).toBeNull();
+  });
+});

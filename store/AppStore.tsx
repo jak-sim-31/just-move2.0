@@ -44,6 +44,9 @@ interface StoreValue extends UserData {
   markLoginPromptShown(): void;
   mockLogin(provider: 'kakao' | 'google' | 'guest'): void;
   setNotification(n: AppSettings['notification']): void;
+  setReminder(patch: Partial<AppSettings['reminder']>): void;
+  /** 알림 문구 기록 (최근 문구 중복 방지) */
+  recordNotificationShown(messageId: string): void;
   resetAll(): Promise<void>;
 }
 
@@ -59,6 +62,7 @@ const empty: UserData = {
     welcomeShownDate: null,
     loginPromptShown: false,
     notification: { ...appConfig.notificationDefault },
+    reminder: { snoozeUntil: null, stopDate: null, lastFiredKey: null },
     account: { provider: 'guest' },
   },
   history: { welcome: [], notification: [] },
@@ -315,6 +319,23 @@ export function AppStoreProvider({
     [patchSettings],
   );
 
+  const setReminder = useCallback(
+    (patch: Partial<AppSettings['reminder']>) =>
+      patchSettings({ reminder: { ...ref.current.settings.reminder, ...patch } }),
+    [patchSettings],
+  );
+  const recordNotificationShown = useCallback(
+    (messageId: string) => {
+      const history = {
+        ...ref.current.history,
+        notification: [...ref.current.history.notification, messageId].slice(-10),
+      };
+      commit({ history });
+      void repository.saveHistory(history);
+    },
+    [commit, repository],
+  );
+
   const resetAll = useCallback(async () => {
     await repository.clear();
     const fresh = await repository.load();
@@ -337,12 +358,14 @@ export function AppStoreProvider({
       markLoginPromptShown,
       mockLogin,
       setNotification,
+      setReminder,
+      recordNotificationShown,
       resetAll,
     }),
     [
       data, ready, startSession, saveProgress, replaceCurrentSlot, finishSession, setPerceived,
       waterCrop, getWelcome, markWelcomeShown, markLoginPromptShown, mockLogin, setNotification,
-      resetAll,
+      setReminder, recordNotificationShown, resetAll,
     ],
   );
 
