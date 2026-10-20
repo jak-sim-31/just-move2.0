@@ -264,3 +264,26 @@ describe('MOVE 포인트·레벨·배지 (수정 전 규칙)', () => {
     expect(monthlyMessage(20)).toContain('대단해요');
   });
 });
+
+import { dueSchedule, todaySchedules } from '@/lib/schedule';
+import type { Schedule } from '@/lib/types';
+
+describe('운동 예약 (수정 전 기능)', () => {
+  const base: Schedule = {
+    id: 'a', exerciseId: 'sitting-01', plannedMin: 1, scheduledDate: '2026-10-20', scheduledTime: '09:00',
+    targetValue: 20, repeatType: 'once', status: 'scheduled', createdAt: '',
+  };
+  it('오늘 예약: 한번만은 그 날짜, 매일은 매일', () => {
+    expect(todaySchedules([base], '2026-10-20')).toHaveLength(1);
+    expect(todaySchedules([base], '2026-10-21')).toHaveLength(0);
+    expect(todaySchedules([{ ...base, repeatType: 'daily' }], '2026-10-25')).toHaveLength(1);
+    expect(todaySchedules([{ ...base, status: 'cancelled' }], '2026-10-20')).toHaveLength(0);
+  });
+  it('예약 시각부터 30분 안에, 하루 한 번만 알린다', () => {
+    expect(dueSchedule([base], '2026-10-20', '08:59')).toBeNull();
+    expect(dueSchedule([base], '2026-10-20', '09:00')?.id).toBe('a');
+    expect(dueSchedule([base], '2026-10-20', '09:30')?.id).toBe('a');
+    expect(dueSchedule([base], '2026-10-20', '09:31')).toBeNull();
+    expect(dueSchedule([{ ...base, lastNotifiedDate: '2026-10-20' }], '2026-10-20', '09:05')).toBeNull();
+  });
+});
