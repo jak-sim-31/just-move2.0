@@ -1,5 +1,6 @@
 export type Posture = 'lying' | 'sitting' | 'standing' | 'walking';
 export type Perceived = 'light' | 'fit' | 'hard';
+export type Difficulty = '쉬움' | '보통' | '어려움';
 
 export const POSTURE_LABEL: Record<Posture, string> = {
   lying: '누워서',
@@ -27,6 +28,11 @@ export interface Exercise {
   orientation: 'portrait' | 'landscape';
   isFirst: boolean;
   active: boolean;
+  /** 수정 전 운동 데이터에서 이어받은 필드 */
+  difficulty: Difficulty;
+  targetValue: number;
+  targetUnit: string;
+  caution: string;
 }
 
 export interface SessionItem {
@@ -47,6 +53,35 @@ export interface Session {
   dropsEarned: number;
   perceived?: Perceived;
   items: SessionItem[];
+  /** MOVE 포인트 (기록 시점에 계산) */
+  points?: number;
+  /** 동작별 실제 횟수 (완료 화면 선택 입력) */
+  counts?: Record<string, number>;
+  memo?: string;
+}
+
+/** 운동 예약 (수정 전 기능) */
+export interface Schedule {
+  id: string;
+  exerciseId: string;
+  plannedMin: 1 | 3 | 5;
+  scheduledDate: string; // YYYY-MM-DD
+  scheduledTime: string; // HH:MM
+  targetValue: number;
+  repeatType: 'once' | 'daily';
+  status: 'scheduled' | 'completed' | 'cancelled';
+  /** 마지막으로 알림을 띄운 날짜 (매일 반복용) */
+  lastNotifiedDate?: string;
+  createdAt: string;
+}
+
+/** 인증사진 (수정 전 기능, 기기에만 저장) */
+export interface ProofPhoto {
+  id: string;
+  sessionId: string;
+  imageUri: string;
+  capturedAt: string;
+  memo?: string;
 }
 
 /** 영상 재생 중인 세션 (중간 저장용) */

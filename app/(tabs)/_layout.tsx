@@ -62,6 +62,18 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
+        name="exercise"
+        options={{
+          title: '운동',
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="figure.run" tintColor={color} size={22} />
+            ) : (
+              <MaterialCommunityIcons name="run" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
         name="records"
         options={{
           title: '기록',

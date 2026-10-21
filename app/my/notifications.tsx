@@ -114,7 +114,7 @@ export default function NotificationSettings() {
         ) : null}
 
         {permission === 'denied' ? (
-          <Text style={[styles.note, { color: colors.destructive }]}>
+          <Text style={[styles.note, { color: '#B45309' }]}>
             브라우저에서 알림이 차단되어 있어요. 브라우저 설정에서 허용해 주세요.
           </Text>
         ) : null}

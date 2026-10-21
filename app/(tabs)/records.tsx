@@ -1,214 +1,344 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColors';
-import { Button, useScreenPad } from '@/components/ui';
-import { MonthCalendar } from '@/components/MonthCalendar';
-import { DayBars } from '@/components/WeekBars';
+import {
+  BarChart,
+  PerceivedRow,
+  PeriodNav,
+  SectionLabel,
+  Segment,
+  StatBox,
+} from '@/components/StatsUI';
+import { MonthGrid } from '@/components/MonthCalendar';
 import { exerciseById } from '@/data/content';
 import {
   addDays,
   addMonths,
-  formatKoDate,
   formatKoMonth,
+  formatMonthDay,
+  kstTime,
   monthStartKey,
   todayKey,
   weekStartKey,
 } from '@/lib/date';
+import { monthlyMessage } from '@/lib/rewards';
 import {
   countedSessions,
-  monthSummary,
   mostPlayedExercise,
   perceivedCounts,
+  rangeSummary,
   weekMinutes,
 } from '@/lib/stats';
-import { PERCEIVED_LABEL, POSTURE_LABEL, type Session } from '@/lib/types';
+import { PERCEIVED_LABEL, type Session } from '@/lib/types';
 import { useStore } from '@/store/AppStore';
 
-type Mode = 'week' | 'month';
+/**
+ * 기록 탭 — 수정 전 기록 탭(357e0d7)의 3구간 구성과 디자인을 유지한다.
+ * 바뀐 점: 연속 기록·'부분' 표시 제거(운영 원칙), 삭제 버튼 보류, 막대는 운동 시간(분).
+ */
+
+type SegmentName = '최근 기록' | '주간 통계' | '월간 통계';
+const SEGMENTS: SegmentName[] = ['최근 기록', '주간 통계', '월간 통계'];
+const WEEK_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
+
+function sessionTitle(s: Session): string {
+  const names = s.items.filter((it) => !it.skipped).map((it) => exerciseById(it.exerciseId)?.name);
+  const first = names.find(Boolean) ?? exerciseById(s.items[0]?.exerciseId ?? '')?.name ?? '운동';
+  const others = new Set(names.filter(Boolean)).size - 1;
+  return others > 0 ? `${first} 외 ${others}개` : first;
+}
+
+function EmptyMove({ title, sub }: { title: string; sub?: string }) {
+  const colors = useColors();
+  return (
+    <>
+      <Ionicons name="calendar-outline" size={48} color={colors.border} />
+      <Text style={[styles.emptyTitle2, { color: colors.text }]}>{title}</Text>
+      {sub ? <Text style={[styles.emptySub, { color: colors.textSecondary }]}>{sub}</Text> : null}
+      {sub ? (
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.emptyBtn, { backgroundColor: colors.accent }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push('/exercise/position');
+          }}
+        >
+          <Ionicons name="flash" size={16} color="#FFF" />
+          <Text style={styles.emptyBtnText}>지금 움직이기</Text>
+        </Pressable>
+      ) : null}
+    </>
+  );
+}
+
+function WeeklyStats({ sessions }: { sessions: Session[] }) {
+  const [offset, setOffset] = useState(0);
+  const ws = weekStartKey(addDays(todayKey(), offset * 7));
+  const we = addDays(ws, 6);
+  const sum = rangeSummary(sessions, ws, we);
+  const drops = sum.sessions.reduce((a, s) => a + s.dropsEarned, 0);
+  const isThisWeek = offset === 0;
+  const label = isThisWeek
+    ? `이번 주 (${formatMonthDay(ws)} ~ ${formatMonthDay(we)})`
+    : `${formatMonthDay(ws)} - ${formatMonthDay(we)}`;
+  const minutes = weekMinutes(sessions, ws).map((d) => d.minutes);
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.statsScroll}>
+      <PeriodNav
+        label={label}
+        onPrev={() => setOffset((o) => o - 1)}
+        onNext={() => setOffset((o) => o + 1)}
+        nextDisabled={offset >= 0}
+      />
+      {sum.count === 0 ? (
+        <View style={styles.empty2}>
+          <EmptyMove
+            title={isThisWeek ? '이번 주에는 아직 완료한 운동이 없어요.' : '이 주에는 완료한 운동이 없어요.'}
+            sub={isThisWeek ? '1분이라도 움직이면 첫 기록이 만들어져요.' : undefined}
+          />
+          <View style={{ width: '100%', marginTop: 24 }}>
+            <BarChart values={[0, 0, 0, 0, 0, 0, 0]} labels={WEEK_LABELS} />
+          </View>
+        </View>
+      ) : (
+        <>
+          <View style={styles.statGrid}>
+            <StatBox label="완료 횟수" value={String(sum.count)} />
+            <StatBox label="운동한 날" value={`${sum.movedDays}일`} />
+            <StatBox label="운동 시간" value={sum.minutes > 0 ? `${sum.minutes}분` : '-'} />
+          </View>
+          <View style={[styles.statGrid, { marginTop: 8 }]}>
+            <StatBox label="획득 MOVE" value={String(sum.points)} />
+            <StatBox label="받은 물방울" value={`${drops}개`} />
+            <View style={{ flex: 1 }} />
+          </View>
+          <SectionLabel>체감 난이도별</SectionLabel>
+          <PerceivedRow counts={perceivedCounts(sum.sessions)} />
+          <SectionLabel>일별 운동 시간 (분)</SectionLabel>
+          <BarChart values={minutes} labels={WEEK_LABELS} />
+        </>
+      )}
+    </ScrollView>
+  );
+}
+
+function MonthlyStats({ sessions }: { sessions: Session[] }) {
+  const colors = useColors();
+  const current = monthStartKey(todayKey());
+  const [month, setMonth] = useState(current);
+  const end = addDays(addMonths(month, 1), -1);
+  const sum = rangeSummary(sessions, month, end);
+  const drops = sum.sessions.reduce((a, s) => a + s.dropsEarned, 0);
+  const topId = mostPlayedExercise(sum.sessions);
+  const topTitle = topId ? exerciseById(topId)?.name : null;
+
+  return (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.statsScroll}>
+      <PeriodNav
+        big
+        label={formatKoMonth(month)}
+        onPrev={() => setMonth(addMonths(month, -1))}
+        onNext={() => setMonth(addMonths(month, 1))}
+        nextDisabled={month >= current}
+      />
+      <View style={styles.statGrid}>
+        <StatBox label="완료 횟수" value={String(sum.count)} />
+        <StatBox label="운동한 날" value={`${sum.movedDays}일`} />
+        <StatBox label="운동 시간" value={sum.minutes > 0 ? `${sum.minutes}분` : '-'} />
+      </View>
+      <View style={[styles.statGrid, { marginTop: 8 }]}>
+        <StatBox label="획득 MOVE" value={String(sum.points)} />
+        <StatBox label="받은 물방울" value={`${drops}개`} />
+        <View style={{ flex: 1 }} />
+      </View>
+      <SectionLabel>체감 난이도별</SectionLabel>
+      <PerceivedRow counts={perceivedCounts(sum.sessions)} />
+      {topTitle ? (
+        <View style={[styles.topExBox, { backgroundColor: colors.secondary }]}>
+          <Ionicons name="trophy-outline" size={14} color={colors.accent} />
+          <Text style={[styles.topExText, { color: colors.text }]}>
+            가장 많이 완료한 운동: <Text style={{ fontWeight: '800' }}>{topTitle}</Text>
+          </Text>
+        </View>
+      ) : null}
+      <SectionLabel>월간 활동</SectionLabel>
+      <MonthGrid sessions={sessions} month={month} />
+      <View style={[styles.msgBox, { backgroundColor: colors.secondary }]}>
+        <Text style={[styles.msgText, { color: colors.text }]}>{monthlyMessage(sum.movedDays)}</Text>
+      </View>
+    </ScrollView>
+  );
+}
 
 export default function RecordsScreen() {
   const colors = useColors();
-  const pad = useScreenPad();
-  const { sessions } = useStore();
-  const today = todayKey();
-  const [mode, setMode] = useState<Mode>('week');
-  const [weekStart, setWeekStart] = useState(weekStartKey(today));
-  const [month, setMonth] = useState(monthStartKey(today));
-  const [openId, setOpenId] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const initial = SEGMENTS.find((s) => s === params.tab) ?? '최근 기록';
+  const [segment, setSegment] = useState<SegmentName>(initial);
+  // MY의 '주간/월간 통계 보기'에서 들어오면 해당 구간을 연다
+  useEffect(() => {
+    const t = SEGMENTS.find((s) => s === params.tab);
+    if (t) setSegment(t);
+  }, [params.tab]);
+  const { sessions, photos } = useStore();
+  const topPad = insets.top;
 
-  const weekEnd = addDays(weekStart, 6);
-  const inRange = (s: Session) =>
-    mode === 'week'
-      ? s.localDate >= weekStart && s.localDate <= weekEnd
-      : s.localDate.startsWith(month.slice(0, 7));
-  const ranged = countedSessions(sessions).filter(inRange);
-  const list = [...ranged].sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  const recent = useMemo(
+    () => [...countedSessions(sessions)].sort((a, b) => b.startedAt.localeCompare(a.startedAt)).slice(0, 10),
+    [sessions],
+  );
 
-  const movedDays = new Set(ranged.map((s) => s.localDate)).size;
-  const totalMin = ranged.reduce((sum, s) => sum + s.creditedMin, 0);
-  const summary = mode === 'month' ? monthSummary(sessions, month) : { movedDays, totalMinutes: totalMin };
-  const topId = mostPlayedExercise(ranged);
-  const perceived = perceivedCounts(ranged);
-  const perceivedTotal = perceived.light + perceived.fit + perceived.hard;
-
-  const move = (dir: -1 | 1) =>
-    mode === 'week' ? setWeekStart(addDays(weekStart, dir * 7)) : setMonth(addMonths(month, dir));
-  const rangeLabel =
-    mode === 'week'
-      ? `${formatKoDate(weekStart).replace(/ \(.\)/, '')} ~ ${formatKoDate(weekEnd).replace(/ \(.\)/, '')}`
-      : formatKoMonth(month);
+  const renderItem = ({ item }: { item: Session }) => {
+    const photo = photos.find((p) => p.sessionId === item.id);
+    const countText = item.counts
+      ? Object.entries(item.counts)
+          .map(([id, n]) => `${exerciseById(id)?.name ?? ''} ${n}${exerciseById(id)?.targetUnit.replace(/\s*\(.*\)/, '') ?? '회'}`)
+          .join(', ')
+      : '';
+    return (
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.successLight }]}>
+        <View style={styles.cardLeft}>
+          <View style={[styles.statusBadge, { backgroundColor: colors.successLight }]}>
+            <Ionicons name="checkmark-circle" size={14} color={colors.success} />
+            <Text style={[styles.statusText, { color: colors.success }]}>완료</Text>
+            {item.perceived ? (
+              <Text style={[styles.statusText, { color: colors.textSecondary, marginLeft: 4 }]}>
+                · {PERCEIVED_LABEL[item.perceived]}
+              </Text>
+            ) : null}
+          </View>
+          <Text style={[styles.exerciseName, { color: colors.text }]} numberOfLines={1}>
+            {sessionTitle(item)}
+          </Text>
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>
+            {formatMonthDay(item.localDate)} {kstTime(item.startedAt)}
+          </Text>
+          <View style={styles.valueRow}>
+            <Ionicons name="trophy-outline" size={13} color={colors.accent} />
+            <Text style={[styles.valueText, { color: colors.text }]}>{item.creditedMin}분</Text>
+            {item.points !== undefined ? (
+              <Text style={[styles.posTag, { color: colors.primary, fontWeight: '700' }]}>
+                · +{item.points} MOVE
+              </Text>
+            ) : null}
+            {item.dropsEarned > 0 ? (
+              <Text style={[styles.posTag, { color: '#3B9AE1', fontWeight: '700' }]}>· 물방울 {item.dropsEarned}</Text>
+            ) : null}
+          </View>
+          {countText ? (
+            <Text style={[styles.memo, { color: colors.textSecondary, fontStyle: 'normal' }]} numberOfLines={2}>
+              {countText}
+            </Text>
+          ) : null}
+          {item.memo ? (
+            <Text style={[styles.memo, { color: colors.textSecondary }]} numberOfLines={1}>
+              {item.memo}
+            </Text>
+          ) : null}
+        </View>
+        <View style={styles.cardRight}>
+          {photo ? (
+            <Image source={{ uri: photo.imageUri }} style={[styles.thumb, { borderColor: colors.border }]} />
+          ) : (
+            <View style={[styles.thumbEmpty, { backgroundColor: colors.muted }]}>
+              <Ionicons name="camera-outline" size={20} color={colors.textSecondary} />
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        contentContainerStyle={[styles.scroll, { paddingTop: pad.top + 16, paddingBottom: 120 }]}
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={[styles.header, { paddingTop: topPad + 16 }]}>
         <Text style={[styles.title, { color: colors.primary }]}>운동 기록</Text>
+        <Segment items={SEGMENTS} value={segment} onChange={setSegment} />
+      </View>
 
-        <View style={[styles.toggle, { backgroundColor: colors.secondary }]}>
-          {(['week', 'month'] as Mode[]).map((m) => (
-            <Pressable
-              key={m}
-              accessibilityRole="button"
-              accessibilityState={{ selected: mode === m }}
-              onPress={() => setMode(m)}
-              style={[styles.toggleBtn, mode === m && { backgroundColor: colors.card }]}
-            >
-              <Text style={[styles.toggleText, { color: mode === m ? colors.primary : colors.textSecondary }]}>
-                {m === 'week' ? '주간' : '월간'}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <View style={styles.rangeRow}>
-          <Pressable accessibilityRole="button" accessibilityLabel="이전" onPress={() => move(-1)} style={styles.nav} hitSlop={8}>
-            <Ionicons name="chevron-back" size={22} color={colors.primary} />
-          </Pressable>
-          <Text style={[styles.rangeText, { color: colors.text }]}>{rangeLabel}</Text>
-          <Pressable accessibilityRole="button" accessibilityLabel="다음" onPress={() => move(1)} style={styles.nav} hitSlop={8}>
-            <Ionicons name="chevron-forward" size={22} color={colors.primary} />
-          </Pressable>
-        </View>
-
-        <View style={styles.stats}>
-          <View style={[styles.stat, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.statNum, { color: colors.primary }]}>{summary.movedDays}일</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>운동한 날</Text>
-          </View>
-          <View style={[styles.stat, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.statNum, { color: colors.primary }]}>{summary.totalMinutes}분</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>총 운동 시간</Text>
-          </View>
-        </View>
-
-        {topId ? (
-          <Text style={[styles.note, { color: colors.textSecondary }]}>
-            가장 많이 한 동작 · {exerciseById(topId)?.name}
-          </Text>
-        ) : null}
-
-        {mode === 'week' ? (
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.section, { color: colors.text }]}>일별 운동 시간</Text>
-            <DayBars data={weekMinutes(sessions, weekStart)} />
-          </View>
-        ) : (
-          <MonthCalendar sessions={sessions} month={month} onMonthChange={setMonth} />
-        )}
-
-        {perceivedTotal > 0 ? (
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.section, { color: colors.text }]}>체감 난이도</Text>
-            <View style={styles.tags}>
-              {(['light', 'fit', 'hard'] as const).map((p) => (
-                <View key={p} style={[styles.tag, { backgroundColor: colors.secondary }]}>
-                  <Text style={[styles.tagText, { color: colors.text }]}>
-                    {PERCEIVED_LABEL[p]} {perceived[p]}
-                  </Text>
-                </View>
-              ))}
+      {segment === '최근 기록' ? (
+        <FlatList
+          data={recent}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 100 }]}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="list-circle-outline" size={56} color={colors.border} />
+              <Text style={[styles.emptyTitle, { color: colors.text }]}>아직 운동 기록이 없어요</Text>
+              <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>오늘 1분부터 시작해볼까요?</Text>
             </View>
-          </View>
-        ) : null}
-
-        <Text style={[styles.section, { color: colors.text, marginTop: 8 }]}>운동 목록</Text>
-        {list.length === 0 ? (
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, gap: 12 }]}>
-            <Text style={[styles.note, { color: colors.textSecondary }]}>
-              이 기간의 운동 기록이 아직 없어요.
-            </Text>
-            <Button label="지금 움직이기" variant="accent" onPress={() => router.push('/exercise/position')} />
-          </View>
-        ) : (
-          list.map((s) => {
-            const open = openId === s.id;
-            const names = s.items.filter((it) => !it.skipped).map((it) => exerciseById(it.exerciseId)?.name ?? '');
-            return (
-              <Pressable
-                key={s.id}
-                accessibilityRole="button"
-                accessibilityState={{ expanded: open }}
-                onPress={() => setOpenId(open ? null : s.id)}
-                style={[styles.item, { backgroundColor: colors.card, borderColor: colors.border }]}
-              >
-                <View style={styles.itemTop}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={open ? 3 : 1}>
-                      {names.filter(Boolean).join(', ') || POSTURE_LABEL[s.posture]}
-                    </Text>
-                    <Text style={[styles.note, { color: colors.textSecondary }]}>
-                      {formatKoDate(s.localDate)} · {POSTURE_LABEL[s.posture]}
-                      {s.perceived ? ` · ${PERCEIVED_LABEL[s.perceived]}` : ''}
-                    </Text>
-                  </View>
-                  <Text style={[styles.itemMin, { color: colors.primary }]}>{s.creditedMin}분</Text>
-                </View>
-                {open ? (
-                  <View style={[styles.detail, { borderTopColor: colors.border }]}>
-                    {s.items.map((it, i) => (
-                      <Text key={i} style={[styles.note, { color: colors.textSecondary }]}>
-                        {exerciseById(it.exerciseId)?.name} · {Math.round(it.playedSec)}초
-                        {it.skipped ? ' (넘김)' : ''}
-                      </Text>
-                    ))}
-                  </View>
-                ) : null}
-              </Pressable>
-            );
-          })
-        )}
-      </ScrollView>
+          }
+        />
+      ) : segment === '주간 통계' ? (
+        <View style={styles.statsWrap}>
+          <WeeklyStats sessions={sessions} />
+        </View>
+      ) : (
+        <View style={styles.statsWrap}>
+          <MonthlyStats sessions={sessions} />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scroll: { paddingHorizontal: 20, gap: 14 },
-  title: { fontSize: 26, fontWeight: '800' },
-  toggle: { flexDirection: 'row', borderRadius: 12, padding: 4 },
-  toggleBtn: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 9 },
-  toggleText: { fontSize: 16, fontWeight: '700' },
-  rangeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  nav: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  rangeText: { fontSize: 17, fontWeight: '800' },
-  stats: { flexDirection: 'row', gap: 10 },
-  stat: { flex: 1, borderWidth: 1, borderRadius: 16, padding: 16 },
-  statNum: { fontSize: 26, fontWeight: '800' },
-  statLabel: { fontSize: 14, marginTop: 2 },
-  note: { fontSize: 14, lineHeight: 20 },
-  card: { borderWidth: 1, borderRadius: 18, padding: 16, gap: 10 },
-  section: { fontSize: 17, fontWeight: '800' },
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tag: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
-  tagText: { fontSize: 14, fontWeight: '600' },
-  item: { borderWidth: 1, borderRadius: 14, padding: 14 },
-  itemTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  itemTitle: { fontSize: 16, fontWeight: '700' },
-  itemMin: { fontSize: 18, fontWeight: '800' },
-  detail: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, gap: 4 },
+  header: { paddingHorizontal: 20, paddingBottom: 12 },
+  title: { fontSize: 24, fontWeight: '800', marginBottom: 16 },
+  statsWrap: { flex: 1, paddingHorizontal: 20 },
+  statsScroll: { paddingBottom: 120 },
+  statGrid: { flexDirection: 'row', gap: 8 },
+  empty2: { alignItems: 'center', paddingTop: 24, gap: 10 },
+  emptyTitle2: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
+  emptySub: { fontSize: 13, textAlign: 'center' },
+  emptyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginTop: 4,
+  },
+  emptyBtnText: { fontSize: 14, fontWeight: '800', color: '#FFF' },
+  topExBox: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 10, padding: 10, marginTop: 8 },
+  topExText: { fontSize: 13, flex: 1 },
+  msgBox: { borderRadius: 12, padding: 14, marginTop: 16 },
+  msgText: { fontSize: 14, lineHeight: 22 },
+  list: { paddingHorizontal: 20 },
+  card: { flexDirection: 'row', borderRadius: 14, borderWidth: 1.5, padding: 14, marginBottom: 12, gap: 12 },
+  cardLeft: { flex: 1 },
+  cardRight: { alignItems: 'center', gap: 8 },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 20,
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 6,
+  },
+  statusText: { fontSize: 11, fontWeight: '700' },
+  exerciseName: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  meta: { fontSize: 12, marginBottom: 6 },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
+  valueText: { fontSize: 13, fontWeight: '700' },
+  posTag: { fontSize: 12 },
+  memo: { fontSize: 12, marginTop: 4, fontStyle: 'italic' },
+  thumb: { width: 64, height: 64, borderRadius: 10, borderWidth: 1 },
+  thumbEmpty: { width: 64, height: 64, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  empty: { alignItems: 'center', paddingTop: 60, gap: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: '700' },
+  emptyDesc: { fontSize: 14 },
 });

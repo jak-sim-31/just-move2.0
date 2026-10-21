@@ -29,6 +29,9 @@ function RootLayoutNav() {
       <Stack.Screen name="exercise/time" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/play" options={{ headerShown: false }} />
       <Stack.Screen name="exercise/complete" options={{ headerShown: false }} />
+      <Stack.Screen name="exercise/photo" options={{ headerShown: false }} />
+      <Stack.Screen name="schedule" options={{ headerShown: false }} />
+      <Stack.Screen name="my/schedules" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="my/notifications" options={{ headerShown: false }} />
       <Stack.Screen name="my/account" options={{ headerShown: false }} />

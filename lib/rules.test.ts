@@ -228,3 +228,79 @@ describe('알림', () => {
     expect(reminderDueKey({ ...base, reminder: { ...base.reminder, stopDate: '2026-10-20' } }, at(10), 0, 5)).toBeNull();
   });
 });
+
+import { badges, monthlyMessage, rewardLevel, sessionPoints } from '@/lib/rewards';
+import { exerciseById } from '@/data/content';
+
+describe('MOVE 포인트·레벨·배지 (수정 전 규칙)', () => {
+  const done = () => true;
+  it('완료한 동작마다 난이도 포인트, 완료 동작이 없으면 10', () => {
+    const items = [
+      { exerciseId: 'standing-03', playedSec: 60, skipped: false }, // 보통 20
+      { exerciseId: 'standing-01', playedSec: 60, skipped: false }, // 쉬움 10
+    ];
+    expect(sessionPoints(items, 3, done, exerciseById)).toBe(30);
+    expect(sessionPoints(items, 1, () => false, exerciseById)).toBe(10);
+    expect(sessionPoints(items, 0, done, exerciseById)).toBe(0);
+  });
+  it('레벨 경계', () => {
+    expect(rewardLevel(0).level).toBe(1);
+    expect(rewardLevel(99).level).toBe(1);
+    expect(rewardLevel(100).level).toBe(2);
+    expect(rewardLevel(1000).level).toBe(5);
+    expect(rewardLevel(150).progressPct).toBe(25);
+  });
+  it('배지 (7일 연속 배지는 없음)', () => {
+    const b = badges(['2026-10-19', '2026-10-20', '2026-10-21'], '2026-10-21');
+    expect(b.map((x) => x.id)).toEqual(['first_move', 'weekly_3', 'weekly_5', 'monthly_10']);
+    expect(b.find((x) => x.id === 'weekly_3')!.unlocked).toBe(true);
+    expect(b.find((x) => x.id === 'weekly_5')!.currentProgress).toBe('이번 주 3/5일');
+  });
+  it('월간 응원 문구 5단계', () => {
+    expect(monthlyMessage(0)).toContain('첫 움직임');
+    expect(monthlyMessage(4)).toContain('작은 움직임');
+    expect(monthlyMessage(9)).toContain('10일');
+    expect(monthlyMessage(19)).toContain('루틴');
+    expect(monthlyMessage(20)).toContain('대단해요');
+  });
+});
+
+import { dueSchedule, todaySchedules } from '@/lib/schedule';
+import type { Schedule } from '@/lib/types';
+
+describe('운동 예약 (수정 전 기능)', () => {
+  const base: Schedule = {
+    id: 'a', exerciseId: 'sitting-01', plannedMin: 1, scheduledDate: '2026-10-20', scheduledTime: '09:00',
+    targetValue: 20, repeatType: 'once', status: 'scheduled', createdAt: '',
+  };
+  it('오늘 예약: 한번만은 그 날짜, 매일은 매일', () => {
+    expect(todaySchedules([base], '2026-10-20')).toHaveLength(1);
+    expect(todaySchedules([base], '2026-10-21')).toHaveLength(0);
+    expect(todaySchedules([{ ...base, repeatType: 'daily' }], '2026-10-25')).toHaveLength(1);
+    expect(todaySchedules([{ ...base, status: 'cancelled' }], '2026-10-20')).toHaveLength(0);
+  });
+  it('예약 시각부터 30분 안에, 하루 한 번만 알린다', () => {
+    expect(dueSchedule([base], '2026-10-20', '08:59')).toBeNull();
+    expect(dueSchedule([base], '2026-10-20', '09:00')?.id).toBe('a');
+    expect(dueSchedule([base], '2026-10-20', '09:30')?.id).toBe('a');
+    expect(dueSchedule([base], '2026-10-20', '09:31')).toBeNull();
+    expect(dueSchedule([{ ...base, lastNotifiedDate: '2026-10-20' }], '2026-10-20', '09:05')).toBeNull();
+  });
+});
+
+import { nextReminderLabel } from '@/lib/reminder';
+
+describe('홈 알림 버튼 안내', () => {
+  const at = (h: number, m = 0) => Date.parse('2026-10-20T00:00:00+09:00') + h * 3600_000 + m * 60_000;
+  const s = defaultSettings(at(10));
+  it('다음 정각을 알려 준다', () => {
+    expect(nextReminderLabel(s, at(10, 15), 0, 5)).toBe('11시');
+    expect(nextReminderLabel(s, at(7), 0, 5)).toBe('9시');
+    expect(nextReminderLabel(s, at(20, 30), 0, 5)).toBe('내일 9시');
+  });
+  it('꺼짐·물방울 다 모음·오늘은 그만', () => {
+    expect(nextReminderLabel({ ...s, notification: { ...s.notification, enabled: false } }, at(10), 0, 5)).toBe('꺼짐');
+    expect(nextReminderLabel(s, at(10), 5, 5)).toBe('내일 9시');
+    expect(nextReminderLabel({ ...s, reminder: { ...s.reminder, stopDate: '2026-10-20' } }, at(10), 0, 5)).toBe('내일 9시');
+  });
+});

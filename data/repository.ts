@@ -3,7 +3,14 @@ import type { FarmState } from '@/lib/farm';
 import { initialFarm } from '@/lib/farm';
 import { appConfig } from '@/lib/config';
 import { todayKey } from '@/lib/date';
-import type { AppSettings, InProgress, MessageHistory, Session } from '@/lib/types';
+import type {
+  AppSettings,
+  InProgress,
+  MessageHistory,
+  ProofPhoto,
+  Schedule,
+  Session,
+} from '@/lib/types';
 
 /**
  * 데이터 접근 계층.
@@ -19,6 +26,10 @@ export interface UserData {
   settings: AppSettings;
   history: MessageHistory;
   inProgress: InProgress | null;
+  /** 운동 예약 (수정 전 기능) */
+  schedules: Schedule[];
+  /** 인증사진 (수정 전 기능) */
+  photos: ProofPhoto[];
 }
 
 export interface Repository {
@@ -29,6 +40,8 @@ export interface Repository {
   saveSettings(settings: AppSettings): Promise<void>;
   saveHistory(history: MessageHistory): Promise<void>;
   saveInProgress(inProgress: InProgress | null): Promise<void>;
+  saveSchedules(schedules: Schedule[]): Promise<void>;
+  savePhotos(photos: ProofPhoto[]): Promise<void>;
   /** 모든 기기 데이터 삭제 (개발·탈퇴용) */
   clear(): Promise<void>;
 }
@@ -40,6 +53,8 @@ const KEY = {
   settings: 'jm2.settings',
   history: 'jm2.history',
   inProgress: 'jm2.inProgress',
+  schedules: 'jm2.schedules',
+  photos: 'jm2.photos',
 } as const;
 
 export function defaultSettings(now: number = Date.now()): AppSettings {
@@ -73,23 +88,27 @@ async function writeJson(key: string, value: unknown): Promise<void> {
 
 export const localRepository: Repository = {
   async load() {
-    const [sessions, progress, farm, settings, history, inProgress] = await Promise.all([
+    const [sessions, progress, farm, settings, history, inProgress, schedules, photos] = await Promise.all([
       readJson<Session[]>(KEY.sessions, []),
       readJson<Record<string, number>>(KEY.progress, {}),
       readJson<FarmState>(KEY.farm, initialFarm),
       readJson<AppSettings | null>(KEY.settings, null),
       readJson<MessageHistory>(KEY.history, { welcome: [], notification: [] }),
       readJson<InProgress | null>(KEY.inProgress, null),
+      readJson<Schedule[]>(KEY.schedules, []),
+      readJson<ProofPhoto[]>(KEY.photos, []),
     ]);
     const merged = { ...defaultSettings(), ...(settings ?? {}) };
     if (!settings) await writeJson(KEY.settings, merged);
-    return { sessions, progress, farm, settings: merged, history, inProgress };
+    return { sessions, progress, farm, settings: merged, history, inProgress, schedules, photos };
   },
   saveSessions: (v) => writeJson(KEY.sessions, v),
   saveProgress: (v) => writeJson(KEY.progress, v),
   saveFarm: (v) => writeJson(KEY.farm, v),
   saveSettings: (v) => writeJson(KEY.settings, v),
   saveHistory: (v) => writeJson(KEY.history, v),
+  saveSchedules: (v) => writeJson(KEY.schedules, v),
+  savePhotos: (v) => writeJson(KEY.photos, v),
   async saveInProgress(v) {
     if (v === null) {
       try {
